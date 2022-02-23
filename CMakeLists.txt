@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.5)
 project(sycl-bench)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "CMake Build Type" FORCE)
@@ -51,51 +51,19 @@ elseif(SYCL_IMPL STREQUAL "triSYCL")
 endif()
 
 set(benchmarks
-  micro/arith.cpp
-  micro/DRAM.cpp
-  micro/host_device_bandwidth.cpp
-  micro/pattern_L2.cpp
-  micro/sf.cpp
-  micro/local_mem.cpp
-  single-kernel/median.cpp
-  single-kernel/scalar_prod.cpp
-  single-kernel/sobel.cpp
-  single-kernel/sobel5.cpp
-  single-kernel/sobel7.cpp
-  single-kernel/vec_add.cpp
-  single-kernel/lin_reg_error.cpp
-  single-kernel/lin_reg_coeff.cpp
-  single-kernel/kmeans.cpp
-  single-kernel/mol_dyn.cpp
-  single-kernel/nbody.cpp
-  pattern/segmentedreduction.cpp
-  pattern/reduction.cpp
-  runtime/dag_task_throughput_sequential.cpp
-  runtime/dag_task_throughput_independent.cpp
-  runtime/blocked_transform.cpp
-  runtime/matmulchain.cpp
-  polybench/2DConvolution.cpp
-  polybench/2mm.cpp
-  polybench/3DConvolution.cpp
-  polybench/3mm.cpp
-  polybench/atax.cpp
-  polybench/bicg.cpp
-  polybench/correlation.cpp
-  polybench/covariance.cpp
-  polybench/fdtd2d.cpp
-  polybench/gemm.cpp
-  polybench/gesummv.cpp
-  polybench/gramschmidt.cpp
-  polybench/mvt.cpp
-  polybench/syr2k.cpp
-  polybench/syrk.cpp
+  mkl/iamin_onemkl.cpp
+
   #compiletime/compiletime.cpp
 )
 
+find_package(oneMKL HINTS /opt/oneMKL/lib/cmake)
+
 foreach(benchmark IN LISTS benchmarks)
+  
   get_filename_component(target ${benchmark} NAME_WE)
 
   add_executable(${target} ${benchmark})
+ 
 
   if(SYCL_IMPL STREQUAL "ComputeCpp" OR SYCL_IMPL STREQUAL "hipSYCL")
     add_sycl_to_target(TARGET ${target} SOURCES ${benchmark})
@@ -118,9 +86,14 @@ foreach(benchmark IN LISTS benchmarks)
     target_compile_definitions(${target} PRIVATE __TRISYCL__)
   endif()
 
-  install(TARGETS ${target} RUNTIME DESTINATION bin/benchmarks/)
+  message(STATUS ${target})
+  #install(TARGETS ${target} RUNTIME DESTINATION bin/benchmarks/)
   get_filename_component(dir ${benchmark} DIRECTORY)
-  set_property(TARGET ${target} PROPERTY FOLDER ${dir})
+  
+  target_link_libraries(${target} PUBLIC MKL::onemkl)
+  #target_link_options(${target} PUBLIC -lonemkl -L/opt/oneMKL/lib/)
+  #set_property(TARGET ${target} PROPERTY FOLDER ${dir})
+  #SET_TARGET_PROPERTIES (iamin_onemkl PROPERTIES FOLDER mkl)
 endforeach(benchmark)
 
 # The "compiletime" target should only be used in the context of the compile time evaluation script
