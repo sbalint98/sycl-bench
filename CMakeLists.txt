@@ -51,12 +51,15 @@ elseif(SYCL_IMPL STREQUAL "triSYCL")
 endif()
 
 set(benchmarks
-  mkl/iamin_onemkl.cpp
-
+  mkl/axpy_onemkl.cpp
+  mkl/gemv_onemkl.cpp
+  mkl/gemm_onemkl.cpp
   #compiletime/compiletime.cpp
 )
 
 find_package(oneMKL HINTS /opt/oneMKL/lib/cmake)
+find_package(cblas REQUIRED)
+find_package(CUDA REQUIRED)
 
 foreach(benchmark IN LISTS benchmarks)
   
@@ -90,11 +93,28 @@ foreach(benchmark IN LISTS benchmarks)
   #install(TARGETS ${target} RUNTIME DESTINATION bin/benchmarks/)
   get_filename_component(dir ${benchmark} DIRECTORY)
   
-  target_link_libraries(${target} PUBLIC MKL::onemkl)
+  target_link_libraries(${target} PUBLIC MKL::onemkl cblas)
   #target_link_options(${target} PUBLIC -lonemkl -L/opt/oneMKL/lib/)
   #set_property(TARGET ${target} PROPERTY FOLDER ${dir})
   #SET_TARGET_PROPERTIES (iamin_onemkl PROPERTIES FOLDER mkl)
 endforeach(benchmark)
+
+
+set(cuda_benchmarks
+  mkl/gemv_cuda.cpp
+  mkl/gemm_cuda.cpp
+  mkl/axpy_cuda.cpp
+  #compiletime/compiletime.cpp
+)
+
+foreach(cuda_benchmark IN LISTS cuda_benchmarks)
+  
+  get_filename_component(target ${cuda_benchmark} NAME_WE)
+  add_executable(${target} ${cuda_benchmark})
+  target_link_libraries(${target} PUBLIC cublas MKL::onemkl cblas)
+  add_sycl_to_target(TARGET ${target})
+
+endforeach(cuda_benchmark)
 
 # The "compiletime" target should only be used in the context of the compile time evaluation script
 #set_target_properties(compiletime PROPERTIES EXCLUDE_FROM_ALL 1)
