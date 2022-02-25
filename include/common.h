@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <unordered_set>
 #include <optional>
+#include <chrono>
 
 #include "command_line.h"
 #include "result_consumer.h"
@@ -209,8 +210,10 @@ public:
       NVEnergyMeasurement nvem;
       mgr.addHook(nvem);
 #endif
-
+      std::this_thread::sleep_for(std::chrono::milliseconds(700));
       mgr.run(additional_args...);
+      std::this_thread::sleep_for(std::chrono::milliseconds(700));
+
     }
     catch(cl::sycl::exception& e){
       std::cerr << "SYCL error: " << e.what() << std::endl;
