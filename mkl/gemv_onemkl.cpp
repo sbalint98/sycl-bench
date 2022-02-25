@@ -61,7 +61,9 @@ public:
   }
   
   void setup() {
-    rand_matrix(A_host, layout, oneapi::mkl::transpose::nontrans, N, N, N);
+    for(int i = 0; i < N*N; i++){
+      A_host[i] = i;
+    }
     rand_vector(x_host, N, 1);
     rand_vector(y_host, N, 1);
 
