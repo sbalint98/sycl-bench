@@ -37,7 +37,7 @@ protected:
 
 public:
   VecAddBench(const BenchmarkArgs &_args) : args(_args) {
-    hipSetDevice(0);
+    gpuErrchk(hipSetDevice(0));
     cublasErrchk(rocblas_create_handle(&handle));
     N = args.problem_size;
     transa= oneapi::mkl::transpose::nontrans;
@@ -59,13 +59,15 @@ public:
     free(C_host); 
     free(C_host_ref);
 
-    hipFree(A_dev);
-    hipFree(B_dev); 
-    hipFree(C_dev); 
+    gpuErrchk(hipFree(A_dev));
+    gpuErrchk(hipFree(B_dev)); 
+    gpuErrchk(hipFree(C_dev));
+
+    cublasErrchk(rocblas_destroy_handle(handle));
   }
   
   void setup() {
-    hipSetDevice(0);
+    gpuErrchk(hipSetDevice(0));
    
     rand_matrix(A_host, layout, oneapi::mkl::transpose::nontrans, N, N, N);
     rand_matrix(B_host, layout, oneapi::mkl::transpose::nontrans, N, N, N);
@@ -75,7 +77,7 @@ public:
     gpuErrchk(hipMemcpy((void*)A_dev, (void*)A_host, sizeof(float)*N*N,  hipMemcpyHostToDevice));
     gpuErrchk(hipMemcpy((void*)B_dev, (void*)B_host, sizeof(float)*N*N,  hipMemcpyHostToDevice));
     gpuErrchk(hipMemcpy((void*)C_dev, (void*)C_host, sizeof(float)*N*N,  hipMemcpyHostToDevice));
-    hipDeviceSynchronize();
+    gpuErrchk(hipDeviceSynchronize());
 
   }
 
@@ -87,7 +89,7 @@ public:
                         &alpha,A_dev, N,
                         B_dev, N, &alpha,
                         C_dev, N));
-    hipDeviceSynchronize();
+    gpuErrchk(hipDeviceSynchronize());
   }
 
   bool verify(VerificationSetting &ver) {

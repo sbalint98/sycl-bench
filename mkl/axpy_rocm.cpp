@@ -55,8 +55,10 @@ public:
     free(y_host); 
     free(y_host_ref);
 
-     gpuErrchk(hipFree(x_dev)); 
-     gpuErrchk(hipFree(y_dev)); 
+    gpuErrchk(hipFree(x_dev)); 
+    gpuErrchk(hipFree(y_dev));
+
+    cublasErrchk(rocblas_destroy_handle(handle));
   }
   
   void setup() {
@@ -77,7 +79,7 @@ public:
 
   void run(std::vector<cl::sycl::event>& events) {
     float alpha = 1.0;
-    rocblas_set_pointer_mode(handle, rocblas_pointer_mode_host);
+    //rocblas_set_pointer_mode(handle, rocblas_pointer_mode_host);
     rocblas_saxpy(handle,N, &alpha,
                              x_dev, 1, y_dev, 1);
     gpuErrchk(hipDeviceSynchronize());

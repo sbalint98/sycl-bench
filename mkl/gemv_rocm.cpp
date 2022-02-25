@@ -34,7 +34,7 @@ protected:
 
 public:
   VecAddBench(const BenchmarkArgs &_args) : args(_args) {
-    hipSetDevice(0);
+    gpuErrchk(hipSetDevice(0));
     cublasErrchk(rocblas_create_handle(&handle));
     N = args.problem_size;
     A_host = (float*)malloc(sizeof(float)*N*N);
@@ -56,10 +56,11 @@ public:
     gpuErrchk(hipFree(A_dev));
     gpuErrchk(hipFree(x_dev)); 
     gpuErrchk(hipFree(y_dev)); 
+    cublasErrchk(rocblas_destroy_handle(handle));
   }
   
   void setup() {
-    hipSetDevice(0);
+    gpuErrchk(hipSetDevice(0));
    
     for(int i = 0; i < N; i++){
       x_host[i] = i;
@@ -74,7 +75,7 @@ public:
     gpuErrchk(hipMemcpy((void*)y_dev, (void*)y_host, sizeof(float)*N,  hipMemcpyHostToDevice));
     gpuErrchk(hipMemcpy((void*)x_dev, (void*)x_host, sizeof(float)*N,  hipMemcpyHostToDevice));
     gpuErrchk(hipMemcpy((void*)A_dev, (void*)A_host, sizeof(float)*N*N,  hipMemcpyHostToDevice));
-    hipDeviceSynchronize();
+    gpuErrchk(hipDeviceSynchronize());
 
   }
 
@@ -88,7 +89,7 @@ public:
                         x_dev, 1,
                         &alpha,
                         y_dev, 1));
-    hipDeviceSynchronize();
+    gpuErrchk(hipDeviceSynchronize());
   }
 
   bool verify(VerificationSetting &ver) {
