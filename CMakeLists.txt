@@ -57,7 +57,7 @@ set(benchmarks
   #compiletime/compiletime.cpp
 )
 
-find_package(oneMKL HINTS /opt/oneMKL/lib/cmake)
+find_package(oneMKL HINTS /opt/onemkl/hipsycl/lib/cmake)
 find_package(cblas REQUIRED)
 find_package(CUDA REQUIRED)
 
@@ -99,23 +99,42 @@ foreach(benchmark IN LISTS benchmarks)
   #SET_TARGET_PROPERTIES (iamin_onemkl PROPERTIES FOLDER mkl)
 endforeach(benchmark)
 
+if (WITH_CUBLAS_TESTS)
+  set(cuda_benchmarks
+    mkl/gemv_cuda.cpp
+    mkl/gemm_cuda.cpp
+    mkl/axpy_cuda.cpp
+    #compiletime/compiletime.cpp
+  )
 
-set(cuda_benchmarks
-  mkl/gemv_cuda.cpp
-  mkl/gemm_cuda.cpp
-  mkl/axpy_cuda.cpp
-  #compiletime/compiletime.cpp
-)
+  foreach(cuda_benchmark IN LISTS cuda_benchmarks)
+    
+    get_filename_component(target ${cuda_benchmark} NAME_WE)
+    add_executable(${target} ${cuda_benchmark})
+    target_link_libraries(${target} PUBLIC cublas MKL::onemkl cblas)
+    add_sycl_to_target(TARGET ${target})
 
-foreach(cuda_benchmark IN LISTS cuda_benchmarks)
-  
-  get_filename_component(target ${cuda_benchmark} NAME_WE)
-  add_executable(${target} ${cuda_benchmark})
-  target_link_libraries(${target} PUBLIC cublas MKL::onemkl cblas)
-  add_sycl_to_target(TARGET ${target})
+  endforeach(cuda_benchmark)
+endif()
+if (WITH_ROCBLAS_TESTS)
+  find_package(rocBLAS REQUIRED)
+  set(rocm_benchmarks
+    mkl/gemv_rocm.cpp
+    mkl/gemm_rocm.cpp
+    mkl/axpy_rocm.cpp
+    #compiletime/compiletime.cpp
+  )
 
-endforeach(cuda_benchmark)
 
+  foreach(rocm_benchmark IN LISTS rocm_benchmarks)
+    
+    get_filename_component(target ${rocm_benchmark} NAME_WE)
+    add_executable(${target} ${rocm_benchmark})
+    target_link_libraries(${target} PUBLIC hip::host roc::rocblas MKL::onemkl cblas)
+    add_sycl_to_target(TARGET ${target})
+
+  endforeach(rocm_benchmark)
+endif()
 # The "compiletime" target should only be used in the context of the compile time evaluation script
 #set_target_properties(compiletime PROPERTIES EXCLUDE_FROM_ALL 1)
 
