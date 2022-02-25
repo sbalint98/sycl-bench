@@ -42,7 +42,7 @@ public:
     x_device = (T*)sycl::malloc_device(sizeof(T)*args.problem_size, dev, ctx);
     y_host = (T*)sycl::malloc_host(sizeof(T)*args.problem_size, ctx);
     y_host_ref = (T*)sycl::malloc_host(sizeof(T)*args.problem_size, ctx);
-    y_device = (T*)sycl::malloc_shared(sizeof(T)*args.problem_size, dev, ctx);
+    y_device = (T*)sycl::malloc_device(sizeof(T)*args.problem_size, dev, ctx);
   }
   ~VecAddBench(){
     sycl::free(x_host, ctx);
